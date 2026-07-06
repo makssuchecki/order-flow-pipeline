@@ -1,2 +1,2 @@
-faust-streaming==0.10.14
+confluent-kafka==2.4.0
 asyncpg==0.29.0

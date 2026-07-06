@@ -1,6 +1,6 @@
 import asyncio, json, uuid, random, os
 from datetime import datetime
-from kafka import KafkaProducer
+from confluent_kafka import Producer
 
 KAFKA_BROKER = os.getenv("KAFKA_BROKER", "localhost:9092")
 EVENTS_PER_SECOND = float(os.getenv("EVENTS_PER_SECOND", "2"))
@@ -16,11 +16,7 @@ PRODUCTS = [
 REGIONS = ["PL", "DE", "FR", "NL", "ES"]
 USERS = [f"user_{i:04d}" for i in range(200)]
 
-producer = KafkaProducer(
-    bootstrap_servers=KAFKA_BROKER,
-    value_serializer=lambda v: json.dumps(v).encode(),
-    retries=5,
-)
+producer = Producer({"bootstrap.servers": KAFKA_BROKER})
 
 def generate_order():
     product, category, base_price = random.choice(PRODUCTS)
@@ -40,11 +36,12 @@ def generate_order():
 
 async def run():
     delay = 1.0 / EVENTS_PER_SECOND
-    print(f"Generator started - {EVENTS_PER_SECOND} events/s -> kafka: {KAFKA_BROKER}")
+    print(f"Generator started — {EVENTS_PER_SECOND} events/s → {KAFKA_BROKER}")
     while True:
         order = generate_order()
-        producer.send("orders", order)
-        print(f"[{order['region']}] {order['product']} ${order['amount']:.2f}")
+        producer.produce("orders", json.dumps(order).encode())
+        producer.poll(0)
+        print(f"→ [{order['region']}] {order['product']} ${order['amount']:.2f}")
         await asyncio.sleep(delay)
 
 asyncio.run(run())
