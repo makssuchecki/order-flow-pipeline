@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS category_stats (
     total_gmv   NUMERIC(12, 2) NOT NULL DEFAULT 0,
     updated_at  TIMESTAMPTZ DEFAULT NOW()
 );
+ALTER TABLE category_stats ADD CONSTRAINT uq_category_region UNIQUE (category, region);
 
 CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_alerts_created_at ON alerts (created_at DESC);
